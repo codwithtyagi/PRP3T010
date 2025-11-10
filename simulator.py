@@ -13,10 +13,6 @@ def simulate_markov_chain(
     days: int,
     seed: int | None = None,
 ) -> Tuple[List[str], Dict[str, int]]:
-    """Simulate a Markov Chain trajectory for the given number of days.
-
-    Returns the visited state names list (length = days + 1 including day 0) and counts.
-    """
     if days < 0:
         raise ValueError("days must be >= 0")
 
@@ -27,13 +23,31 @@ def simulate_markov_chain(
     else:
         current_idx = mc.state_index(initial_state)
 
-    trajectory_indices: List[int] = [current_idx]
-    for _ in range(days):
+    
+    trajectory_indices = np.empty(days + 1, dtype=int)
+    trajectory_indices[0] = current_idx
+    
+    
+    for i in range(1, days + 1):
         current_idx = mc.step(current_idx, rng)
-        trajectory_indices.append(current_idx)
+        trajectory_indices[i] = current_idx
 
+    
     trajectory_states = [mc.states[i] for i in trajectory_indices]
-    counts: Dict[str, int] = {s: trajectory_states.count(s) for s in mc.states}
+    
+   
+    counts: Dict[str, int] = {}
+    unique, counts_arr = np.unique(trajectory_indices, return_counts=True)
+    for idx, count in zip(unique, counts_arr):
+        counts[mc.states[idx]] = int(count)
+    
+   
+    for state in mc.states:
+        if state not in counts:
+            counts[state] = 0
+    
     return trajectory_states, counts
+
+
 
 
